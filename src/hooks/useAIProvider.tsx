@@ -427,36 +427,79 @@ export const useAIProvider = () => {
     }
   };
 
-  // Text to Speech using Gemini
+  // Text to Speech using Gemini 2.5 Flash TTS
   const textToSpeech = async (text: string): Promise<void> => {
+    if (!text || !text.trim()) {
+      console.warn('⚠️ No text provided for TTS');
+      return;
+    }
+
     try {
-      console.log(' Generating speech for text...');
+      console.log('🔊 Generating speech with Gemini TTS model...');
+      console.log('📝 Text to convert:', text);
       
       const genAI = new GoogleGenerativeAI(AI_CONFIG.audio.gemini.apiKey);
       const model = genAI.getGenerativeModel({ 
-        model: AI_CONFIG.audio.gemini.model,
+        model: AI_CONFIG.audio.gemini.ttsModel,
       });
       
-      const result = await model.generateContent([
-        `Generate speech audio for this text: ${text}`,
-      ]);
+      // Request content with speech modalities
+      const result = await model.generateContent({
+        contents: [{ role: 'user', parts: [{ text }] }],
+        generationConfig: {
+          responseModalities: ['AUDIO'], // Request audio output
+        },
+      });
       
-      // Extract audio from response if available
       const response = await result.response;
+      console.log('📦 Gemini TTS response:', response);
       
-      // For now, use browser's built-in speech synthesis as fallback
-      if ('speechSynthesis' in window) {
-        const utterance = new SpeechSynthesisUtterance(text);
-        utterance.rate = 1.0;
-        utterance.pitch = 1.0;
-        utterance.volume = 1.0;
-        window.speechSynthesis.speak(utterance);
-        console.log(' Playing speech with browser TTS');
+      // Try to extract audio from response
+      let audioPlayed = false;
+      
+      // Check if response has audio parts
+      if (response.candidates && response.candidates[0]?.content?.parts) {
+        console.log('🔍 Checking response parts for audio...');
+        for (const part of response.candidates[0].content.parts) {
+          console.log('📄 Part:', part);
+          
+          // Check for inline audio data
+          if (part.inlineData && part.inlineData.mimeType?.includes('audio')) {
+            console.log('✅ Audio data found! Playing...');
+            
+            // Create audio element and play
+            const audio = new Audio(`data:${part.inlineData.mimeType};base64,${part.inlineData.data}`);
+            audio.onplay = () => console.log('🎵 Audio playback started');
+            audio.onended = () => console.log('✅ Audio playback completed');
+            audio.onerror = (e) => console.error('❌ Audio playback error:', e);
+            await audio.play();
+            audioPlayed = true;
+            break;
+          }
+        }
       }
-    } catch (error) {
-      console.error('TTS error:', error);
-      // Fallback to browser TTS
+      
+      // Fallback to browser's built-in speech synthesis if no audio returned
+      if (!audioPlayed) {
+        console.log('⚠️ No audio in Gemini response, using browser TTS fallback');
+        if ('speechSynthesis' in window) {
+          window.speechSynthesis.cancel();
+          const utterance = new SpeechSynthesisUtterance(text);
+          utterance.rate = 1.0;
+          utterance.pitch = 1.0;
+          utterance.volume = 1.0;
+          window.speechSynthesis.speak(utterance);
+          console.log('✅ Playing speech with browser TTS');
+        }
+      }
+    } catch (error: any) {
+      console.error('❌ TTS error:', error);
+      console.error('Error details:', error?.message || JSON.stringify(error, null, 2));
+      
+      // Fallback to browser TTS on error
       if ('speechSynthesis' in window) {
+        console.log('🔄 Using browser TTS as fallback due to error');
+        window.speechSynthesis.cancel();
         const utterance = new SpeechSynthesisUtterance(text);
         window.speechSynthesis.speak(utterance);
       }

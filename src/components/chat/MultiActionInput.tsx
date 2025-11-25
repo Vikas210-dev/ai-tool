@@ -83,8 +83,18 @@ export const MultiActionInput = ({
   };
 
   const handleTextToSpeech = () => {
+    console.log(' TTS button clicked');
+    console.log('Message:', message);
+    console.log(' onTextToSpeech function:', onTextToSpeech);
+    
     if (message.trim() && onTextToSpeech) {
+      console.log(' Calling textToSpeech with:', message);
       onTextToSpeech(message);
+    } else {
+      console.warn(' TTS not triggered:', {
+        hasMessage: !!message.trim(),
+        hasCallback: !!onTextToSpeech
+      });
     }
   };
 
@@ -163,7 +173,7 @@ export const MultiActionInput = ({
                     size="icon"
                     className="rounded-full h-9 w-9"
                     onClick={handleTextToSpeech}
-                    disabled={!message.trim()}
+                    // disabled={!message.trim()}
                   >
                     <Volume2 className="w-5 h-5" />
                   </Button>

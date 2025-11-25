@@ -45,7 +45,8 @@ export const AI_CONFIG = {
     provider: 'gemini',
     gemini: {
       apiKey: import.meta.env.VITE_GEMINI_API_KEY || 'AIzaSyBI0bRLT4wUFFBXJIBwTF7eDfcIC57roik',
-      model: 'gemini-2.5-flash', // Multimodal model with audio support
+      model: 'gemini-2.5-flash', // For transcription
+      ttsModel: 'gemini-2.5-flash-preview-tts', // For text-to-speech
     },
   }
 };
