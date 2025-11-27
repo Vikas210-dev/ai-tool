@@ -3,7 +3,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { MessageBubble } from "./MessageBubble";
 import { TypingIndicator } from "./TypingIndicator";
 import { MultiActionInput } from "./MultiActionInput";
-import { useAIProvider, AIProviderType, ImageProviderType } from "@/hooks/useAIProvider";
+import { useAIProvider, AIProviderType, ImageProviderType, UploadedFile } from "@/hooks/useAIProvider";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { Plus, Image as ImageIcon } from "lucide-react";
@@ -43,7 +43,7 @@ export const ChatArea = () => {
     setStreamingContent("");
   };
 
-  const handleSend = async (content: string) => {
+  const handleSend = async (content: string, files?: UploadedFile[]) => {
     if (!content || !content.trim()) {
       return;
     }
@@ -52,7 +52,9 @@ export const ChatArea = () => {
     const userMessage: Message = {
       id: Date.now().toString(),
       role: "user",
-      content,
+      content: files && files.length > 0 
+        ? `${content} [${files.length} file(s) attached: ${files.map(f => f.name).join(', ')}]`
+        : content,
       timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
     };
     
@@ -61,8 +63,8 @@ export const ChatArea = () => {
     setStreamingContent("");
 
     try {
-      // Call AI provider
-      const response = await sendMessage(content);
+      // Call AI provider with files
+      const response = await sendMessage(content, files);
       
       // Check if it's an image response
       if (response.type === 'image') {
@@ -226,8 +228,6 @@ export const ChatArea = () => {
               textToSpeech(lastAssistantMessage.content);
             }
           }}
-          onImageGenerate={() => console.log("Image generation modal")}
-          onFileUpload={() => console.log("File upload")}
           isRecording={isRecording}
         />
       </div>

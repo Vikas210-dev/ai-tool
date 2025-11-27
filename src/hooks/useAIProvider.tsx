@@ -7,6 +7,13 @@ import { AI_CONFIG } from '@/config/aiConfig';
 export type AIProviderType = 'gemini' | 'openai' | 'claude' | 'nvidia' | 'meta';
 export type ImageProviderType = 'imagen' | 'dalle'|'gemini' ;
 
+export interface UploadedFile {
+  name: string;
+  size: number;
+  type: string;
+  data: string; // base64 data
+}
+
 interface Message {
   role: 'user' | 'assistant';
   content: string;
@@ -60,9 +67,32 @@ export const useAIProvider = () => {
   }, []);
 
   // Call Gemini API
-  const callGemini = async (question: string): Promise<string> => {
+  const callGemini = async (question: string, files?: UploadedFile[]): Promise<string> => {
     const client = initializeClient('gemini') as GoogleGenerativeAI;
     const model = client.getGenerativeModel({ model: AI_CONFIG.gemini.model });
+    
+    // If files are present, create multimodal request
+    if (files && files.length > 0) {
+      const parts: any[] = [];
+      
+      // Add file parts first
+      for (const file of files) {
+        parts.push({
+          inlineData: {
+            mimeType: file.type,
+            data: file.data,
+          },
+        });
+      }
+      
+      // Add text prompt
+      parts.push({ text: question });
+      
+      const result = await model.generateContent(parts);
+      return result.response.text() || '';
+    }
+    
+    // Regular text-only request
     const result = await model.generateContent(question);
     return result.response.text() || '';
   };
@@ -188,14 +218,17 @@ export const useAIProvider = () => {
   };
 
   // Main send message function
-  const sendMessage = async (question: string): Promise<{ type: 'text' | 'image', content: string }> => {
+  const sendMessage = async (question: string, files?: UploadedFile[]): Promise<{ type: 'text' | 'image', content: string }> => {
     setIsLoading(true);
     
     try {
-      console.log(' Received question:', question);
+      console.log('Received question:', question);
+      if (files && files.length > 0) {
+        console.log(' Files attached:', files.length);
+      }
       
-      // Check if this is an image generation request
-      if (isImageGenerationRequest(question)) {
+      // Check if this is an image generation request (only for text-only queries)
+      if (!files && isImageGenerationRequest(question)) {
         console.log(' Routing to image generation with provider:', imageProvider);
         const imageUrl = await generateImage(question);
         console.log(' Image generated:', imageUrl.substring(0, 50) + '...');
@@ -207,7 +240,7 @@ export const useAIProvider = () => {
 
       switch (provider) {
         case 'gemini':
-          responseText = await callGemini(question);
+          responseText = await callGemini(question, files);
           break;
         case 'openai':
           responseText = await callOpenAI(question);

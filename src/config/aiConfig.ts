@@ -4,7 +4,7 @@ export const AI_CONFIG = {
       import.meta.env.VITE_GEMINI_API_KEY ||
       "AIzaSyBI0bRLT4wUFFBXJIBwTF7eDfcIC57roik",
     // model: 'gemini-2.0-flash' || 'gemini-2.5-flash' ||'gemini-2.5-flash-preview-09-2025'||'gemini-flash-latest'||'gemini-2.5-pro' ||'gemini-2.5-flash-lite'||'gemini-2.5-flash-lite-preview-09-2025' ||'gemini-2.0-flash-lite' (these all are available models to use for free )
-    model: "gemini-2.0-flash-lite",
+    model: "gemini-2.0-flash",
   },
   openai: {
     apiKey:
