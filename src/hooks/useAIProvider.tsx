@@ -115,7 +115,7 @@ export const useAIProvider = () => {
 
   // Generate Image using Gemini 2.0 with responseModalities
   const generateImageWithGemini = async (prompt: string): Promise<string> => {
-    console.log('📸 Generating with Gemini model:', AI_CONFIG.imageGeneration.gemini.model);
+    console.log(' Generating with Gemini model:', AI_CONFIG.imageGeneration.gemini.model);
     
     const genAI = new GoogleGenAI({
       apiKey: AI_CONFIG.imageGeneration.gemini.apiKey,
@@ -178,7 +178,7 @@ export const useAIProvider = () => {
     const lowerPrompt = prompt.toLowerCase();
     const isImageRequest = imageKeywords.some(keyword => lowerPrompt.includes(keyword));
     
-    console.log('🔍 Image Detection:', {
+    console.log(' Image Detection:', {
       prompt: prompt,
       isImageRequest: isImageRequest,
       matchedKeyword: imageKeywords.find(k => lowerPrompt.includes(k))
@@ -253,9 +253,9 @@ export const useAIProvider = () => {
   // Start voice recording with silence detection
   const startVoiceRecording = async (onTranscriptionComplete?: (text: string) => void): Promise<void> => {
     try {
-      console.log('🎤 Requesting microphone access...');
+      console.log(' Requesting microphone access...');
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      console.log('✅ Microphone access granted');
+      console.log(' Microphone access granted');
       
       const recorder = new MediaRecorder(stream, {
         mimeType: 'audio/webm;codecs=opus'
@@ -279,7 +279,7 @@ export const useAIProvider = () => {
       // Collect audio data
       recorder.ondataavailable = (e) => {
         if (e.data.size > 0) {
-          console.log('📊 Audio chunk received, size:', e.data.size);
+          console.log(' Audio chunk received, size:', e.data.size);
           chunks.push(e.data);
         }
       };
@@ -288,8 +288,8 @@ export const useAIProvider = () => {
       recorder.start(100);
       setMediaRecorder(recorder);
       setIsRecording(true);
-      console.log('🎤 Recording started with silence detection');
-      console.log('🔊 Speak now...');
+      console.log(' Recording started with silence detection');
+      console.log(' Speak now...');
       
       // Check for silence periodically
       const checkSilence = () => {
@@ -301,19 +301,19 @@ export const useAIProvider = () => {
           
           // Log audio level for debugging
           if (average > 5) {
-            console.log('🔊 Audio level:', Math.round(average));
+            console.log(' Audio level:', Math.round(average));
           }
           
           if (average > SILENCE_THRESHOLD) {
             // Sound detected, reset timer
             lastSoundTime = Date.now();
-            console.log('🗣️ Voice detected!');
+            console.log(' Voice detected!');
           } else {
             // Check if silence duration exceeded
             const silenceDuration = Date.now() - lastSoundTime;
             if (silenceDuration > SILENCE_DURATION && chunks.length > 0) {
-              console.log('🔇 Silence detected for 2 seconds, stopping...');
-              console.log('📦 Total chunks collected:', chunks.length);
+              console.log(' Silence detected for 2 seconds, stopping...');
+              console.log(' Total chunks collected:', chunks.length);
               cancelAnimationFrame(animationId);
               stopAndTranscribe(recorder, chunks, stream, audioContext, onTranscriptionComplete);
               return;
@@ -430,48 +430,52 @@ export const useAIProvider = () => {
   // Text to Speech using Gemini 2.5 Flash TTS
   const textToSpeech = async (text: string): Promise<void> => {
     if (!text || !text.trim()) {
-      console.warn('⚠️ No text provided for TTS');
+      console.warn(' No text provided for TTS');
       return;
     }
 
     try {
-      console.log('🔊 Generating speech with Gemini TTS model...');
-      console.log('📝 Text to convert:', text);
+      console.log(' Generating speech with Gemini TTS model...');
+      console.log(' Text to convert:', text);
       
-      const genAI = new GoogleGenerativeAI(AI_CONFIG.audio.gemini.apiKey);
-      const model = genAI.getGenerativeModel({ 
-        model: AI_CONFIG.audio.gemini.ttsModel,
+      // Use GoogleGenAI for audio modalities support
+      const genAI = new GoogleGenAI({
+        apiKey: AI_CONFIG.audio.gemini.apiKey,
       });
       
-      // Request content with speech modalities
-      const result = await model.generateContent({
-        contents: [{ role: 'user', parts: [{ text }] }],
-        generationConfig: {
+      const result = await genAI.models.generateContent({
+        model: AI_CONFIG.audio.gemini.ttsModel,
+        contents: [
+          {
+            role: 'user',
+            parts: [{ text }],
+          },
+        ],
+        config: {
           responseModalities: ['AUDIO'], // Request audio output
         },
       });
       
-      const response = await result.response;
-      console.log('📦 Gemini TTS response:', response);
+      console.log(' Gemini TTS response:', result);
       
       // Try to extract audio from response
       let audioPlayed = false;
       
       // Check if response has audio parts
-      if (response.candidates && response.candidates[0]?.content?.parts) {
-        console.log('🔍 Checking response parts for audio...');
-        for (const part of response.candidates[0].content.parts) {
-          console.log('📄 Part:', part);
+      if (result?.candidates?.[0]?.content?.parts) {
+        console.log(' Checking response parts for audio...');
+        for (const part of result.candidates[0].content.parts) {
+          console.log(' Part:', part);
           
           // Check for inline audio data
           if (part.inlineData && part.inlineData.mimeType?.includes('audio')) {
-            console.log('✅ Audio data found! Playing...');
+            console.log(' Audio data found! Playing...');
             
             // Create audio element and play
             const audio = new Audio(`data:${part.inlineData.mimeType};base64,${part.inlineData.data}`);
-            audio.onplay = () => console.log('🎵 Audio playback started');
-            audio.onended = () => console.log('✅ Audio playback completed');
-            audio.onerror = (e) => console.error('❌ Audio playback error:', e);
+            audio.onplay = () => console.log(' Audio playback started');
+            audio.onended = () => console.log(' Audio playback completed');
+            audio.onerror = (e) => console.error(' Audio playback error:', e);
             await audio.play();
             audioPlayed = true;
             break;
@@ -481,7 +485,7 @@ export const useAIProvider = () => {
       
       // Fallback to browser's built-in speech synthesis if no audio returned
       if (!audioPlayed) {
-        console.log('⚠️ No audio in Gemini response, using browser TTS fallback');
+        console.log(' No audio in Gemini response, using browser TTS fallback');
         if ('speechSynthesis' in window) {
           window.speechSynthesis.cancel();
           const utterance = new SpeechSynthesisUtterance(text);
@@ -489,16 +493,16 @@ export const useAIProvider = () => {
           utterance.pitch = 1.0;
           utterance.volume = 1.0;
           window.speechSynthesis.speak(utterance);
-          console.log('✅ Playing speech with browser TTS');
+          console.log(' Playing speech with browser TTS');
         }
       }
     } catch (error: any) {
-      console.error('❌ TTS error:', error);
+      console.error(' TTS error:', error);
       console.error('Error details:', error?.message || JSON.stringify(error, null, 2));
       
       // Fallback to browser TTS on error
       if ('speechSynthesis' in window) {
-        console.log('🔄 Using browser TTS as fallback due to error');
+        console.log(' Using browser TTS as fallback due to error');
         window.speechSynthesis.cancel();
         const utterance = new SpeechSynthesisUtterance(text);
         window.speechSynthesis.speak(utterance);

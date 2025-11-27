@@ -42,10 +42,10 @@ export const AI_CONFIG = {
   },
   // Audio/Voice (TTS & STT)
   audio: {
-    provider: 'gemini',
+    provider: 'gemini', 
     gemini: {
       apiKey: import.meta.env.VITE_GEMINI_API_KEY || 'AIzaSyBI0bRLT4wUFFBXJIBwTF7eDfcIC57roik',
-      model: 'gemini-2.5-flash', // For transcription
+      model: 'gemini-2.5-flash', // For audio prompt 
       ttsModel: 'gemini-2.5-flash-preview-tts', // For text-to-speech
     },
   }

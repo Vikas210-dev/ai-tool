@@ -1,4 +1,5 @@
 import { useState, useRef } from "react";
+import EmojiPicker, { EmojiClickData } from 'emoji-picker-react';
 import { 
   Send, 
   Mic, 
@@ -19,6 +20,11 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { Badge } from "@/components/ui/badge";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 
 const quickModes = [
   { label: "Chat", icon: Sparkles },
@@ -31,7 +37,7 @@ interface MultiActionInputProps {
   onSend: (message: string) => void;
   onVoiceStart?: (onComplete: (text: string) => void) => void;
   onVoiceStop?: () => void;
-  onTextToSpeech?: (text: string) => void;
+  onTextToSpeech?: () => void;
   onImageGenerate?: () => void;
   onFileUpload?: () => void;
   isRecording?: boolean;
@@ -47,6 +53,7 @@ export const MultiActionInput = ({
   isRecording: externalIsRecording = false,
 }: MultiActionInputProps) => {
   const [message, setMessage] = useState("");
+  const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   const handleSend = () => {
@@ -61,6 +68,13 @@ export const MultiActionInput = ({
       e.preventDefault();
       handleSend();
     }
+  };
+
+  const onEmojiClick = (emojiData: EmojiClickData) => {
+    setMessage(prev => prev + emojiData.emoji);
+    setShowEmojiPicker(false);
+    // Focus back on textarea
+    textareaRef.current?.focus();
   };
 
   const toggleRecording = async () => {
@@ -83,18 +97,12 @@ export const MultiActionInput = ({
   };
 
   const handleTextToSpeech = () => {
-    console.log(' TTS button clicked');
-    console.log('Message:', message);
-    console.log(' onTextToSpeech function:', onTextToSpeech);
+    console.log(' TTS button clicked - reading last assistant message');
     
-    if (message.trim() && onTextToSpeech) {
-      console.log(' Calling textToSpeech with:', message);
-      onTextToSpeech(message);
+    if (onTextToSpeech) {
+      onTextToSpeech();
     } else {
-      console.warn(' TTS not triggered:', {
-        hasMessage: !!message.trim(),
-        hasCallback: !!onTextToSpeech
-      });
+      console.warn(' TTS callback not provided');
     }
   };
 
@@ -173,7 +181,6 @@ export const MultiActionInput = ({
                     size="icon"
                     className="rounded-full h-9 w-9"
                     onClick={handleTextToSpeech}
-                    // disabled={!message.trim()}
                   >
                     <Volume2 className="w-5 h-5" />
                   </Button>
@@ -199,18 +206,33 @@ export const MultiActionInput = ({
           {/* Right Actions */}
           <div className="flex items-center gap-1 pr-2">
             <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="rounded-full h-9 w-9"
-                  >
-                    <Smile className="w-5 h-5" />
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent>Emoji</TooltipContent>
-              </Tooltip>
+              <Popover open={showEmojiPicker} onOpenChange={setShowEmojiPicker}>
+                <Tooltip>
+                  <PopoverTrigger asChild>
+                    <TooltipTrigger asChild>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="rounded-full h-9 w-9"
+                      >
+                        <Smile className="w-5 h-5" />
+                      </Button>
+                    </TooltipTrigger>
+                  </PopoverTrigger>
+                  <TooltipContent>Emoji</TooltipContent>
+                </Tooltip>
+                <PopoverContent 
+                  className="w-auto p-0 border-0" 
+                  align="end"
+                  sideOffset={5}
+                >
+                  <EmojiPicker 
+                    onEmojiClick={onEmojiClick}
+                    width={350}
+                    height={400}
+                  />
+                </PopoverContent>
+              </Popover>
             </TooltipProvider>
 
             {/* Send Button */}

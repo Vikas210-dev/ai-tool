@@ -217,7 +217,15 @@ export const ChatArea = () => {
           onSend={handleSend}
           onVoiceStart={(onComplete) => startVoiceRecording(onComplete)}
           onVoiceStop={stopVoiceRecording}
-          onTextToSpeech={textToSpeech}
+          onTextToSpeech={() => {
+            // Read the last assistant message
+            const lastAssistantMessage = messages
+              .filter(m => m.role === 'assistant' && m.type !== 'image')
+              .pop();
+            if (lastAssistantMessage?.content) {
+              textToSpeech(lastAssistantMessage.content);
+            }
+          }}
           onImageGenerate={() => console.log("Image generation modal")}
           onFileUpload={() => console.log("File upload")}
           isRecording={isRecording}
