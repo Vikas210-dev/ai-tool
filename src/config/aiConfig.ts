@@ -59,6 +59,14 @@ export const AI_CONFIG = {
       ttsModel: "gemini-2.5-flash-preview-tts", // For text-to-speech
     },
   },
+  // Image Editing (Hugging Face)
+  imageEdit: {
+    huggingface: {
+      apiKey: import.meta.env.VITE_HUGGINGFACE_API_KEY || '', // Add your HF token
+      model: 'Phr00t/Qwen-Image-Edit-Rapid-AIO',
+      endpoint: 'https://api-inference.huggingface.co/models/Phr00t/Qwen-Image-Edit-Rapid-AIO',
+    },
+  },
 };
 
 export type AIProviderConfig = typeof AI_CONFIG;

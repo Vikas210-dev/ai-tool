@@ -180,6 +180,44 @@ export const useAIProvider = () => {
     return generateImageWithGemini(prompt);
   };
 
+  // Image editing using Hugging Face Qwen model
+  const editImageWithHuggingFace = async (imageBase64: string, instruction: string): Promise<string> => {
+    try {
+      console.log(' Editing image with Hugging Face Qwen model...');
+      
+      const response = await fetch(AI_CONFIG.imageEdit.huggingface.endpoint, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${AI_CONFIG.imageEdit.huggingface.apiKey}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          inputs: {
+            image: imageBase64,
+            prompt: instruction,
+          },
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`HuggingFace API error: ${response.statusText}`);
+      }
+
+      const blob = await response.blob();
+      const base64 = await new Promise<string>((resolve) => {
+        const reader = new FileReader();
+        reader.onloadend = () => resolve(reader.result as string);
+        reader.readAsDataURL(blob);
+      });
+
+      console.log(' Image edited successfully');
+      return base64;
+    } catch (error: any) {
+      console.error(' Image editing error:', error);
+      throw new Error(`Failed to edit image: ${error.message}`);
+    }
+  };
+
   // Check if prompt is asking for image generation
   const isImageGenerationRequest = (prompt: string): boolean => {
     const imageKeywords = [
@@ -217,6 +255,33 @@ export const useAIProvider = () => {
     return isImageRequest;
   };
 
+  // Check if prompt is asking for image editing
+  const isImageEditRequest = (prompt: string, hasImageFile: boolean): boolean => {
+    if (!hasImageFile) return false;
+    
+    const editKeywords = [
+      'edit',
+      'modify',
+      'change',
+      'update',
+      'transform',
+      'adjust',
+      'alter',
+      'improve',
+      'enhance',
+      'fix',
+      'remove',
+      'add',
+      'replace',
+      'make it',
+      'turn into',
+      'convert to',
+    ];
+    
+    const lowerPrompt = prompt.toLowerCase();
+    return editKeywords.some(keyword => lowerPrompt.includes(keyword));
+  };
+
   // Main send message function
   const sendMessage = async (question: string, files?: UploadedFile[]): Promise<{ type: 'text' | 'image', content: string }> => {
     setIsLoading(true);
@@ -225,6 +290,14 @@ export const useAIProvider = () => {
       console.log('Received question:', question);
       if (files && files.length > 0) {
         console.log(' Files attached:', files.length);
+        
+        // Check if this is an image editing request
+        const imageFile = files.find(f => f.type.startsWith('image/'));
+        if (imageFile && isImageEditRequest(question, true)) {
+          console.log(' Routing to image editing');
+          const editedImage = await editImageWithHuggingFace(imageFile.data, question);
+          return { type: 'image', content: editedImage };
+        }
       }
       
       // Check if this is an image generation request (only for text-only queries)
