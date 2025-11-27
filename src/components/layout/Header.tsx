@@ -25,7 +25,9 @@ export const Header = () => {
           <div className="w-8 h-8 rounded-xl bg-gradient-primary flex items-center justify-center">
             <Sparkles className="w-5 h-5 text-primary-foreground" />
           </div>
-          <span className="font-semibold text-lg hidden sm:inline">AI Platform</span>
+          <span className="font-semibold text-lg hidden sm:inline">
+            AI Platform
+          </span>
         </div>
 
         {/* Model Selector */}
@@ -45,15 +47,17 @@ export const Header = () => {
 
         {/* User Menu */}
         <div className="flex items-center gap-2">
-          <Button variant="ghost" size="icon" className="rounded-full">
+          {/* <Button variant="ghost" size="icon" className="rounded-full">
             <Settings className="w-5 h-5" />
-          </Button>
-          
+          </Button> */}
+
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" size="icon" className="rounded-full">
                 <Avatar className="w-8 h-8">
-                  <AvatarFallback className="bg-primary text-primary-foreground">U</AvatarFallback>
+                  <AvatarFallback className="bg-primary text-primary-foreground">
+                    U
+                  </AvatarFallback>
                 </Avatar>
               </Button>
             </DropdownMenuTrigger>

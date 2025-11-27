@@ -1,14 +1,14 @@
 import { useState } from "react";
-import { 
-  Home, 
-  MessageSquare, 
-  Image as ImageIcon, 
-  Mic, 
-  Upload, 
-  FileText, 
-  Key, 
+import {
+  Home,
+  MessageSquare,
+  Image as ImageIcon,
+  Mic,
+  Upload,
+  FileText,
+  Key,
   Settings,
-  ChevronRight
+  ChevronRight,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -18,10 +18,8 @@ const sidebarItems = [
   { icon: Home, label: "Home", path: "/" },
   { icon: MessageSquare, label: "Chats", path: "/chats" },
   { icon: ImageIcon, label: "Images", path: "/images" },
-  { icon: Mic, label: "Audio", path: "/audio" },
   { icon: Upload, label: "Uploads", path: "/uploads" },
   { icon: FileText, label: "Templates", path: "/templates" },
-  { icon: Key, label: "API Keys", path: "/api-keys" },
   { icon: Settings, label: "Settings", path: "/settings" },
 ];
 

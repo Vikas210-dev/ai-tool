@@ -20,18 +20,6 @@ const mockConversations: Conversation[] = [
     timestamp: "2m ago",
     unread: 2,
   },
-  {
-    id: "2",
-    title: "Code Review",
-    preview: "Can you help me optimize this React component?",
-    timestamp: "1h ago",
-  },
-  {
-    id: "3",
-    title: "Marketing Strategy",
-    preview: "What are the best practices for SEO in 2024?",
-    timestamp: "3h ago",
-  },
 ];
 
 interface ConversationListProps {
@@ -39,7 +27,10 @@ interface ConversationListProps {
   onSelect: (id: string) => void;
 }
 
-export const ConversationList = ({ selectedId, onSelect }: ConversationListProps) => {
+export const ConversationList = ({
+  selectedId,
+  onSelect,
+}: ConversationListProps) => {
   return (
     <div className="w-full lg:w-80 border-r border-border bg-card h-full flex flex-col">
       {/* Header */}
@@ -70,13 +61,20 @@ export const ConversationList = ({ selectedId, onSelect }: ConversationListProps
                   <h3 className="font-medium text-sm truncate">{conv.title}</h3>
                 </div>
                 {conv.unread && (
-                  <Badge variant="default" className="rounded-full h-5 px-2 text-xs gradient-primary">
+                  <Badge
+                    variant="default"
+                    className="rounded-full h-5 px-2 text-xs gradient-primary"
+                  >
                     {conv.unread}
                   </Badge>
                 )}
               </div>
-              <p className="text-xs text-muted-foreground truncate pl-6">{conv.preview}</p>
-              <p className="text-xs text-muted-foreground/60 mt-1 pl-6">{conv.timestamp}</p>
+              <p className="text-xs text-muted-foreground truncate pl-6">
+                {conv.preview}
+              </p>
+              <p className="text-xs text-muted-foreground/60 mt-1 pl-6">
+                {conv.timestamp}
+              </p>
             </button>
           ))}
         </div>
